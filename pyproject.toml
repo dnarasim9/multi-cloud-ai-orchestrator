@@ -1,0 +1,150 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "multi-cloud-deployment-orchestrator"
+version = "1.0.0"
+description = "Multi-cloud deployment platform with autonomous orchestration"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    {name = "Dheemanth", email = "dheemanth.hn@gmail.com"}
+]
+dependencies = [
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+    "sqlalchemy[asyncio]>=2.0.23",
+    "asyncpg>=0.29.0",
+    "alembic>=1.13.0",
+    "redis>=5.0.0",
+    "aiokafka>=0.10.0",
+    "httpx>=0.25.0",
+    "python-jose[cryptography]>=3.3.0",
+    "bcrypt>=4.0.0",
+    "python-multipart>=0.0.6",
+    "structlog>=23.2.0",
+    "opentelemetry-api>=1.21.0",
+    "opentelemetry-sdk>=1.21.0",
+    "opentelemetry-instrumentation-fastapi>=0.42b0",
+    "opentelemetry-exporter-otlp>=1.21.0",
+    "prometheus-client>=0.19.0",
+    "tenacity>=8.2.0",
+    "circuitbreaker>=2.0.0",
+    "ulid-py>=1.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.12.0",
+    "httpx>=0.25.0",
+    "factory-boy>=3.3.0",
+    "faker>=20.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.7.0",
+    "bandit>=1.7.0",
+    "radon>=6.0.0",
+    "safety>=2.3.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "-v --cov=src/orchestrator --cov-report=term-missing --cov-report=html"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "S", "B", "A", "C4", "DTZ", "T20", "ICN", "PIE", "PT", "RSE", "RET", "SLF", "SIM", "TID", "TCH", "ARG", "PLC", "PLE", "PLR", "PLW", "TRY", "FLY", "PERF", "RUF"]
+ignore = [
+    "S101",    # assert — acceptable in domain validation and tests
+    "TRY003",  # long exception messages — acceptable for domain errors
+    "PLR0913", # too many arguments — common in DI constructors
+    "TCH",     # type checking imports — impractical with `from __future__ import annotations`
+    "A003",    # builtin attribute shadowing — `id` is standard in ORM/API models
+    "A002",    # builtin argument shadowing — `id` parameter in repo methods
+    "A001",    # builtin variable shadowing — `id` used in domain entities
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["orchestrator"]
+force-sort-within-sections = true
+
+[tool.ruff.lint.per-file-ignores]
+"src/orchestrator/infrastructure/observability/tracing.py" = ["PLC0415"]
+"tests/**/*.py" = [
+    "S105",    # Possible hardcoded password — expected in tests
+    "S106",    # Possible hardcoded password argument — expected in tests
+    "S108",    # Insecure /tmp usage — acceptable in tests
+    "SLF001",  # Private member access — needed to test internals
+    "PLR2004", # Magic values — acceptable in test assertions
+    "ARG",     # Unused arguments — common with fixtures
+    "PT004",   # Fixtures not returning anything
+    "PT011",   # pytest.raises too broad
+    "TCH",     # Type checking imports — not needed in tests
+]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = [
+    "orchestrator.infrastructure.persistence.repositories.deployment_repo",
+    "orchestrator.infrastructure.persistence.repositories.task_repo",
+    "orchestrator.infrastructure.persistence.repositories.drift_repo",
+    "orchestrator.infrastructure.persistence.repositories.user_repo",
+    "orchestrator.infrastructure.cache.redis_cache",
+]
+# SQLAlchemy Column[T] ↔ T mismatches are expected when mapping ORM → domain
+disable_error_code = ["arg-type", "assignment", "attr-defined", "misc"]
+
+[[tool.mypy.overrides]]
+module = ["jose.*", "redis.*", "aiokafka.*", "circuitbreaker.*"]
+ignore_missing_imports = true
+
+[tool.bandit]
+skips = ["B101", "B104", "B311"]
+
+[tool.coverage.run]
+source = ["src/orchestrator"]
+omit = [
+    "*/tests/*",
+    "*/migrations/*",
+    # PostgreSQL repositories (require running DB)
+    "*/persistence/repositories/deployment_repo.py",
+    "*/persistence/repositories/task_repo.py",
+    "*/persistence/repositories/drift_repo.py",
+    "*/persistence/repositories/user_repo.py",
+    "*/persistence/database.py",
+    "*/persistence/models.py",
+    # Observability (require external collectors)
+    "*/observability/tracing.py",
+    "*/observability/metrics.py",
+    # Redis (requires running Redis instance)
+    "*/cache/redis_cache.py",
+    # FastAPI app and routes (covered by integration tests)
+    "*/api/app.py",
+    "*/api/routes/*.py",
+    "*/api/dependencies/*.py",
+    # Entrypoint
+    "*/main.py",
+]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
