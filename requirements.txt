@@ -1,0 +1,23 @@
+# Core
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+sqlalchemy[asyncio]>=2.0.23
+asyncpg>=0.29.0
+alembic>=1.13.0
+redis>=5.0.0
+aiokafka>=0.10.0
+httpx>=0.25.0
+python-jose[cryptography]>=3.3.0
+bcrypt>=4.0.0
+python-multipart>=0.0.6
+structlog>=23.2.0
+opentelemetry-api>=1.21.0
+opentelemetry-sdk>=1.21.0
+opentelemetry-instrumentation-fastapi>=0.42b0
+opentelemetry-exporter-otlp>=1.21.0
+prometheus-client>=0.19.0
+tenacity>=8.2.0
+circuitbreaker>=2.0.0
+ulid-py>=1.1.0
