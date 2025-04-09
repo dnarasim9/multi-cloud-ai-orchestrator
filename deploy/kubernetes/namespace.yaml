@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: deployment-orchestrator
+  labels:
+    app.kubernetes.io/name: deployment-orchestrator
+    app.kubernetes.io/part-of: multi-cloud-platform
